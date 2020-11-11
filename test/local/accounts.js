@@ -5,16 +5,16 @@ var Ganache = require(process.env.TEST_BUILD
   ? "../../build/ganache.core." + process.env.TEST_BUILD + ".js"
   : "../../index.js");
 const genSend = require("../helpers/utils/rpc");
-const Account = require("ethereumjs-account").default;
 const { promisify } = require("util");
 const utils = require("ethereumjs-util");
+const Account = utils.Account;
 
-describe("Accounts", () => {
+describe.only("Accounts", () => {
   const expectedAddress = "0x604a95C9165Bc95aE016a5299dd7d400dDDBEa9A";
   const badAddress = "0x1234567890123456789012345678901234567890";
   const mnemonic = "into trim cross then helmet popular suit hammer cart shrug oval student";
 
-  it("should respect the BIP99 mnemonic", async() => {
+  it("should respect the BIP99 mnemonic", async function() {
     const options = { mnemonic };
     const { accounts } = await initializeTestProvider(options);
 
@@ -42,7 +42,7 @@ describe("Accounts", () => {
     );
   });
 
-  it("should unlock specified accounts, in conjunction with --secure", async() => {
+  it.only("should unlock specified accounts, in conjunction with --secure", async() => {
     const options = {
       mnemonic,
       secure: true,
@@ -203,15 +203,15 @@ describe("Accounts", () => {
     });
 
     async function setUp(initialNonce) {
+      console.log("initialNonce --> " + initialNonce);
+      console.log("from: --> " + from);
       // Hack to seed the state with an account with a very high nonce
       const stateManager = provider.manager.state.blockchain.vm.stateManager;
-      const putAccount = promisify(stateManager.putAccount.bind(stateManager));
-      await putAccount(
-        utils.toBuffer(from),
-        new Account({
+      await stateManager.putAccount(
+        utils.Address.fromString(from),
+        Account.fromAccountData({
           balance: "0xffffffffffffffffffff",
-          nonce: new BN(initialNonce),
-          address: from
+          nonce: new BN(initialNonce)
         })
       );
       // we need to mine a block for the putAccount to take effect
